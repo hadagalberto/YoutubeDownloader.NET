@@ -1,0 +1,16 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <form asp-action="Download" asp-area="Home">
+        <div class="form-group">
+            <label for="video">Video Url</label>
+            <input class="form-control" name="video" id="video" />
+        </div>
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">Download</button>
+        </div>
+    </form>
+</div>
