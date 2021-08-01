@@ -66,8 +66,6 @@ namespace YoutubeDownloader.Controllers
 
                     var stream = await youtubeClient.Videos.Streams.GetAsync(streamInfo);
 
-                    await youtubeClient.Videos.Streams.
-
                     archive.AddEntry(download.Title + ".mp3", stream);
                 }
 
