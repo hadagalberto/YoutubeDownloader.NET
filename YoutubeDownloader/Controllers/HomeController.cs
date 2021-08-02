@@ -104,18 +104,26 @@ namespace YoutubeDownloader.Controllers
             }
             catch (Exception ex)
             {
-                TempData["Erro"] = ex.Message;
+                TempData["Erro"] = "Erro: " + ex.Message + " - Exception: " + ex.StackTrace.ToString();
                 return RedirectToAction(nameof(Index));
             }
         }
 
         private async Task DownloadMusica(PlaylistVideo video)
         {
-            var streamManifest = await youtubeClient.Videos.Streams.GetManifestAsync(video.Id.Value);
+            try
+            {
+                var streamManifest = await youtubeClient.Videos.Streams.GetManifestAsync(video.Id.Value);
 
-            var streamInfo = streamManifest.GetAudioOnlyStreams().GetWithHighestBitrate();
-            if(!string.IsNullOrEmpty(video.Title))
-                dictStreams.Add($"{video.Title}.mp3", await youtubeClient.Videos.Streams.GetAsync(streamInfo));
+                var streamInfo = streamManifest.GetAudioOnlyStreams().GetWithHighestBitrate();
+                if (!string.IsNullOrEmpty(video.Title))
+                    dictStreams.Add($"{video.Title}.mp3", await youtubeClient.Videos.Streams.GetAsync(streamInfo));
+            }
+            catch
+            {
+
+            }
+            
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
