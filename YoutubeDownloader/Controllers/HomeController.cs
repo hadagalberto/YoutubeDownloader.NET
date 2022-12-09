@@ -50,6 +50,11 @@ namespace YoutubeDownloader.Controllers
                 return RedirectToAction(nameof(DownloadPlaylist), new { playlist = video });
             }
 
+            if (video.Split(" ").Count() > 1)
+            {
+                return RedirectToAction(nameof(DownloadMany), new { urls = video.Split(" ") });
+            }
+
             try
             {
                 var download = await youtubeClient.Videos.GetAsync(video);
@@ -66,6 +71,58 @@ namespace YoutubeDownloader.Controllers
             {
                 TempData["Erro"] = ex.Message;
                 return RedirectToAction(nameof(Index));
+            }
+        }
+
+        public async Task<IActionResult> DownloadMany(List<string> urls)
+        {
+            if (urls == null || urls.Count == 0)
+            {
+                TempData["Erro"] = "Please input a url!";
+                return RedirectToAction(nameof(Index));
+            }
+
+            dictStreams = new Dictionary<string, Stream>();
+
+            foreach (var url in urls)
+            {
+                if (url.Contains("list"))
+                {
+                    return RedirectToAction(nameof(DownloadPlaylist), new { playlist = url });
+                }
+
+                try
+                {
+                    var download = await youtubeClient.Videos.GetAsync(url);
+
+                    var streamManifest = await youtubeClient.Videos.Streams.GetManifestAsync(download.Id.Value);
+
+                    var streamInfo = streamManifest.GetAudioOnlyStreams().GetWithHighestBitrate();
+
+                    var stream = await youtubeClient.Videos.Streams.GetAsync(streamInfo);
+
+                    dictStreams.Add(download.Title + ".mp3", stream);
+                }
+                catch (Exception ex)
+                {
+                    TempData["Erro"] = ex.Message;
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+
+            using (var zip = new ZipFile())
+            {
+                foreach (var item in dictStreams)
+                {
+                    zip.AddEntry(item.Key, item.Value);
+                }
+
+                using (var memoryStream = new MemoryStream())
+                {
+                    zip.Save(memoryStream);
+
+                    return File(memoryStream, "application/zip", "Downloads.zip");
+                }
             }
         }
 
